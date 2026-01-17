@@ -1,0 +1,15 @@
+# Render Blueprint for This Day in History - Vedic Edition
+# Deploy with: https://render.com/deploy
+
+services:
+  - type: web
+    name: this-day-vedic-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: oregon
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+    healthCheckPath: /

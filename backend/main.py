@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, date
 from typing import Optional, List
 import httpx
+import os
 from pydantic import BaseModel
 
 from vedic_calc import (
@@ -26,10 +27,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware for React frontend
+# CORS configuration - allow frontend origins
+# Set ALLOWED_ORIGINS env var in production (comma-separated list)
+default_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+env_origins = os.environ.get("ALLOWED_ORIGINS", "")
+if env_origins:
+    default_origins.extend([o.strip() for o in env_origins.split(",") if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "*"],
+    allow_origins=default_origins + ["*"],  # Allow all origins for API access
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
