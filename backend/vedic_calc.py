@@ -219,24 +219,92 @@ def calculate_aspects(positions: Dict[str, dict]) -> List[dict]:
             
             rashi2 = data2['rashi']['id']
             distance = (rashi2 - rashi1 + 12) % 12
+            reverse_distance = (rashi1 - rashi2 + 12) % 12
             
-            # 7th house aspect (opposition)
+            # Conjunction (same sign)
+            if distance == 0:
+                aspects.append({
+                    'planet1': planet1,
+                    'planet2': planet2,
+                    'type': 'conjunction',
+                    'house': 1,
+                    'key': f"{planet1}_conjunction_{planet2}",
+                })
+            
+            # 3rd house aspect (2 signs apart)
+            if distance == 2 or reverse_distance == 2:
+                aspects.append({
+                    'planet1': planet1,
+                    'planet2': planet2,
+                    'type': '3rd_house',
+                    'house': 3,
+                    'key': f"{planet1}_3rd_{planet2}",
+                })
+            
+            # 4th house aspect / Square (3 signs apart)
+            if distance == 3 or reverse_distance == 3:
+                aspects.append({
+                    'planet1': planet1,
+                    'planet2': planet2,
+                    'type': 'square',
+                    'house': 4,
+                    'key': f"{planet1}_square_{planet2}",
+                })
+            
+            # 5th house aspect / Trine (4 signs apart)
+            if distance == 4 or reverse_distance == 4:
+                aspects.append({
+                    'planet1': planet1,
+                    'planet2': planet2,
+                    'type': 'trine',
+                    'house': 5,
+                    'key': f"{planet1}_trine_{planet2}",
+                })
+            
+            # 6th house aspect (5 signs apart)
+            if distance == 5 or reverse_distance == 5:
+                aspects.append({
+                    'planet1': planet1,
+                    'planet2': planet2,
+                    'type': '6th_house',
+                    'house': 6,
+                    'key': f"{planet1}_6th_{planet2}",
+                })
+            
+            # 7th house aspect (opposition - 6 signs apart)
             if distance == 6:
                 aspects.append({
                     'planet1': planet1,
                     'planet2': planet2,
                     'type': 'opposition',
+                    'house': 7,
                     'key': f"{planet1}_opposition_{planet2}",
                 })
             
-            # Mars special aspects (4th and 8th)
-            if planet1 == 'Mars' and distance in (3, 7):
+            # 8th house aspect (7 signs apart)
+            if distance == 7 or reverse_distance == 7:
                 aspects.append({
                     'planet1': planet1,
                     'planet2': planet2,
-                    'type': 'mars_special',
-                    'key': f"Mars_aspect_{planet2}",
+                    'type': '8th_house',
+                    'house': 8,
+                    'key': f"{planet1}_8th_{planet2}",
                 })
+            
+            # 12th house aspect (11 signs apart, or 1 sign behind)
+            if distance == 11 or reverse_distance == 11:
+                aspects.append({
+                    'planet1': planet1,
+                    'planet2': planet2,
+                    'type': '12th_house',
+                    'house': 12,
+                    'key': f"{planet1}_12th_{planet2}",
+                })
+            
+            # Mars special aspects (4th and 8th) - already covered above but keep for special marker
+            if planet1 == 'Mars' and distance in (3, 7):
+                # Add mars_special marker to existing aspects
+                pass
             
             # Jupiter special aspects (5th and 9th)
             if planet1 == 'Jupiter' and distance in (4, 8):
@@ -244,6 +312,7 @@ def calculate_aspects(positions: Dict[str, dict]) -> List[dict]:
                     'planet1': planet1,
                     'planet2': planet2,
                     'type': 'jupiter_special',
+                    'house': 5 if distance == 4 else 9,
                     'key': f"Jupiter_aspect_{planet2}",
                 })
             
@@ -253,6 +322,7 @@ def calculate_aspects(positions: Dict[str, dict]) -> List[dict]:
                     'planet1': planet1,
                     'planet2': planet2,
                     'type': 'saturn_special',
+                    'house': 3 if distance == 2 else 10,
                     'key': f"Saturn_aspect_{planet2}",
                 })
     

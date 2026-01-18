@@ -1,7 +1,16 @@
-import React from 'react';
-import { Filter, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Filter, X, Globe, MapPin } from 'lucide-react';
+import { getCountries } from '../lib/api';
 
 function FilterPanel({ filters, setFilters, categories, isOpen, onToggle }) {
+  const [countriesData, setCountriesData] = useState({ countries: [], regions: [] });
+
+  useEffect(() => {
+    getCountries()
+      .then(data => setCountriesData(data))
+      .catch(err => console.error('Failed to load countries:', err));
+  }, []);
+
   const handleCategoryChange = (categoryId) => {
     setFilters(prev => ({
       ...prev,
@@ -16,11 +25,27 @@ function FilterPanel({ filters, setFilters, categories, isOpen, onToggle }) {
     }));
   };
 
-  const clearFilters = () => {
-    setFilters({ category: null, yearFrom: null, yearTo: null });
+  const handleCountryChange = (value) => {
+    setFilters(prev => ({
+      ...prev,
+      country: value || null,
+      region: null // Clear region when country is selected
+    }));
   };
 
-  const hasActiveFilters = filters.category || filters.yearFrom || filters.yearTo;
+  const handleRegionChange = (value) => {
+    setFilters(prev => ({
+      ...prev,
+      region: value || null,
+      country: null // Clear country when region is selected
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({ category: null, yearFrom: null, yearTo: null, country: null, region: null });
+  };
+
+  const hasActiveFilters = filters.category || filters.yearFrom || filters.yearTo || filters.country || filters.region;
 
   return (
     <div className={`filter-panel ${isOpen ? 'open' : ''}`}>
@@ -77,6 +102,34 @@ function FilterPanel({ filters, setFilters, categories, isOpen, onToggle }) {
                 max="2024"
               />
             </div>
+          </div>
+
+          <div className="filter-section">
+            <label><Globe size={14} /> Region</label>
+            <select
+              value={filters.region || ''}
+              onChange={(e) => handleRegionChange(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">All Regions</option>
+              {countriesData.regions?.map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-section">
+            <label><MapPin size={14} /> Country</label>
+            <select
+              value={filters.country || ''}
+              onChange={(e) => handleCountryChange(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">All Countries</option>
+              {countriesData.countries?.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
         </div>
       )}

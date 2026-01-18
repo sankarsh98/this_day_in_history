@@ -18,6 +18,8 @@ export async function getEventsByDate(month, day, filters = {}) {
   if (filters.category) params.append('category', filters.category);
   if (filters.yearFrom) params.append('year_from', filters.yearFrom);
   if (filters.yearTo) params.append('year_to', filters.yearTo);
+  if (filters.country) params.append('country', filters.country);
+  if (filters.region) params.append('region', filters.region);
   
   const query = params.toString() ? `?${params.toString()}` : '';
   const response = await api.get(`/events/${month}/${day}${query}`);
@@ -26,6 +28,11 @@ export async function getEventsByDate(month, day, filters = {}) {
 
 export async function getCategories() {
   const response = await api.get('/categories');
+  return response.data;
+}
+
+export async function getCountries() {
+  const response = await api.get('/countries');
   return response.data;
 }
 
@@ -52,5 +59,20 @@ export async function searchByPlanetaryPosition(planet, month, day, nakshatra = 
   if (rashi) params.rashi = rashi;
   
   const response = await api.get('/vedic/search', { params });
+  return response.data;
+}
+
+export async function searchByAspect(planet1, planet2, aspectType, month, day, country = null, region = null) {
+  const params = { 
+    planet1, 
+    planet2, 
+    aspect_type: aspectType, 
+    month, 
+    day 
+  };
+  if (country) params.country = country;
+  if (region) params.region = region;
+  
+  const response = await api.get('/vedic/aspect-search', { params });
   return response.data;
 }

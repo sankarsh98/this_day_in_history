@@ -2979,3 +2979,124 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* ======================================
+   COUNTRY & REGION FILTERING
+   ====================================== */
+
+.filter-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.filter-section label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+}
+
+.country-filter {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.location-filters {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.location-filters .form-select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Country tags in results */
+.country-tags {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.country-tag {
+  background: #E3F2FD;
+  color: #1565C0;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* Aspect search badges */
+.criteria-badge.aspect-badge {
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.criteria-badge.country-badge {
+  background: #1565C0;
+}
+
+.criteria-badge.region-badge {
+  background: #00897B;
+}
+
+/* Result aspect display */
+.result-aspect {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.aspect-planets {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.aspect-type-badge {
+  background: var(--accent-light);
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+/* Aspect type grid improvements */
+.aspect-type-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .aspect-type-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .location-filters {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .aspect-type-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

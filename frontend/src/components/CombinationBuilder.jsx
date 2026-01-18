@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Search, Star, Circle, Zap, RotateCcw, ExternalLink, BookOpen, TrendingUp, Plus, X } from 'lucide-react';
-import { searchByPlanetaryPosition } from '../lib/api';
+import React, { useState, useEffect } from 'react';
+import { Search, Star, Circle, Zap, RotateCcw, ExternalLink, BookOpen, TrendingUp, Plus, X, Globe, MapPin } from 'lucide-react';
+import { searchByPlanetaryPosition, searchByAspect, getCountries } from '../lib/api';
 
 const PLANETS = [
   { id: 'Sun', name: 'Sun', symbol: '☉', color: '#FF6B35' },
@@ -38,19 +38,32 @@ const RASHIS = [
 ];
 
 const ASPECT_TYPES = [
-  { id: 'conjunction', name: 'Conjunction', description: 'Same sign' },
-  { id: 'opposition', name: 'Opposition', description: '7th house aspect' },
-  { id: 'trine', name: 'Trine', description: '5th/9th house' },
-  { id: 'square', name: 'Square', description: '4th/10th house' },
+  { id: 'conjunction', name: 'Conjunction', description: 'Same sign (1st)', house: 1 },
+  { id: '3rd_house', name: '3rd House', description: '2 signs apart', house: 3 },
+  { id: 'square', name: 'Square', description: '4th house aspect', house: 4 },
+  { id: 'trine', name: 'Trine', description: '5th house aspect', house: 5 },
+  { id: '6th_house', name: '6th House', description: '5 signs apart', house: 6 },
+  { id: 'opposition', name: 'Opposition', description: '7th house aspect', house: 7 },
+  { id: '8th_house', name: '8th House', description: '7 signs apart', house: 8 },
+  { id: '12th_house', name: '12th House', description: '11 signs apart', house: 12 },
 ];
 
 function CombinationBuilder({ selectedDate }) {
   const [searchMode, setSearchMode] = useState('position'); // 'position' or 'aspect'
   const [conditions, setConditions] = useState([{ planet: '', nakshatra: '', rashi: '', type: 'nakshatra' }]);
   const [aspectSearch, setAspectSearch] = useState({ planet1: '', planet2: '', aspectType: '' });
+  const [countryFilter, setCountryFilter] = useState({ country: '', region: '' });
+  const [countriesData, setCountriesData] = useState({ countries: [], regions: [] });
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Fetch countries list on mount
+  useEffect(() => {
+    getCountries()
+      .then(data => setCountriesData(data))
+      .catch(err => console.error('Failed to load countries:', err));
+  }, []);
 
   const addCondition = () => {
     if (conditions.length < 5) {
@@ -111,27 +124,22 @@ function CombinationBuilder({ selectedDate }) {
         setResults({ type: 'position', data: result, conditions: validConditions });
       } else {
         // Aspect search
-        if (!aspectSearch.planet1 || !aspectSearch.planet2) {
-          setError('Please select both planets for aspect search');
+        if (!aspectSearch.planet1 || !aspectSearch.planet2 || !aspectSearch.aspectType) {
+          setError('Please select both planets and an aspect type');
           setLoading(false);
           return;
         }
 
-        // Search for conjunction (same rashi) as a simple case
-        const result = await searchByPlanetaryPosition(
+        // Use the new aspect search API
+        const result = await searchByAspect(
           aspectSearch.planet1,
+          aspectSearch.planet2,
+          aspectSearch.aspectType,
           month,
           day,
-          null,
-          null
+          countryFilter.country || null,
+          countryFilter.region || null
         );
-
-        // Add aspect type info
-        result.aspect_search = {
-          planet1: aspectSearch.planet1,
-          planet2: aspectSearch.planet2,
-          aspectType: aspectSearch.aspectType || 'any'
-        };
 
         setResults({ type: 'aspect', data: result });
       }
@@ -145,6 +153,7 @@ function CombinationBuilder({ selectedDate }) {
   const handleReset = () => {
     setConditions([{ planet: '', nakshatra: '', rashi: '', type: 'nakshatra' }]);
     setAspectSearch({ planet1: '', planet2: '', aspectType: '' });
+    setCountryFilter({ country: '', region: '' });
     setResults(null);
     setError(null);
   };
@@ -336,6 +345,33 @@ function CombinationBuilder({ selectedDate }) {
                   ))}
                 </div>
               </div>
+
+              {/* Country/Region Filter */}
+              <div className="form-group country-filter">
+                <label><Globe size={14} /> Filter by Location (Optional)</label>
+                <div className="location-filters">
+                  <select
+                    value={countryFilter.region}
+                    onChange={(e) => setCountryFilter({ ...countryFilter, region: e.target.value, country: '' })}
+                    className="form-select"
+                  >
+                    <option value="">-- All Regions --</option>
+                    {countriesData.regions?.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={countryFilter.country}
+                    onChange={(e) => setCountryFilter({ ...countryFilter, country: e.target.value, region: '' })}
+                    className="form-select"
+                  >
+                    <option value="">-- All Countries --</option>
+                    {countriesData.countries?.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </>
         )}
@@ -372,9 +408,25 @@ function CombinationBuilder({ selectedDate }) {
               </div>
             )}
             {results.type === 'aspect' && (
-              <p className="results-criteria">
-                {aspectSearch.planet1} {aspectSearch.aspectType || 'aspecting'} {aspectSearch.planet2}
-              </p>
+              <div className="search-criteria-badges">
+                <span className="criteria-badge aspect-badge">
+                  {PLANETS.find(p => p.id === aspectSearch.planet1)?.symbol} {aspectSearch.planet1}
+                  {' '}<TrendingUp size={12} />{' '}
+                  {ASPECT_TYPES.find(a => a.id === aspectSearch.aspectType)?.name || aspectSearch.aspectType}
+                  {' '}<TrendingUp size={12} />{' '}
+                  {PLANETS.find(p => p.id === aspectSearch.planet2)?.symbol} {aspectSearch.planet2}
+                </span>
+                {countryFilter.country && (
+                  <span className="criteria-badge country-badge">
+                    <MapPin size={12} /> {countryFilter.country}
+                  </span>
+                )}
+                {countryFilter.region && (
+                  <span className="criteria-badge region-badge">
+                    <Globe size={12} /> {countryFilter.region}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
@@ -386,18 +438,42 @@ function CombinationBuilder({ selectedDate }) {
                 <div key={index} className="result-card">
                   <div className="result-header">
                     <span className="result-year">{item.event.year}</span>
-                    <div className="result-position">
-                      <span className="position-planet">{item.planetary_position?.planet}</span>
-                      <span className="position-details">
-                        {item.planetary_position?.rashi} / {item.planetary_position?.nakshatra}
-                        {' '}(Pada {item.planetary_position?.pada})
-                      </span>
-                      {item.planetary_position?.dignity && (
-                        <span className={`dignity-badge ${item.planetary_position.dignity}`}>
-                          {item.planetary_position.dignity}
+                    {/* Show position for position search */}
+                    {results.type === 'position' && item.planetary_position && (
+                      <div className="result-position">
+                        <span className="position-planet">{item.planetary_position?.planet}</span>
+                        <span className="position-details">
+                          {item.planetary_position?.rashi} / {item.planetary_position?.nakshatra}
+                          {' '}(Pada {item.planetary_position?.pada})
                         </span>
-                      )}
-                    </div>
+                        {item.planetary_position?.dignity && (
+                          <span className={`dignity-badge ${item.planetary_position.dignity}`}>
+                            {item.planetary_position.dignity}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {/* Show aspect info for aspect search */}
+                    {results.type === 'aspect' && item.aspect && (
+                      <div className="result-aspect">
+                        <span className="aspect-planets">
+                          {item.aspect.planet1} ({item.aspect.planet1_rashi})
+                          {' '}-{' '}
+                          {item.aspect.planet2} ({item.aspect.planet2_rashi})
+                        </span>
+                        <span className="aspect-type-badge">
+                          {item.aspect.aspect_type.replace('_', ' ')}
+                        </span>
+                      </div>
+                    )}
+                    {/* Show country tags */}
+                    {item.event.countries?.length > 0 && (
+                      <div className="country-tags">
+                        {item.event.countries.slice(0, 2).map((c, i) => (
+                          <span key={i} className="country-tag">{c}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
                   <p className="result-text">{item.event.text}</p>

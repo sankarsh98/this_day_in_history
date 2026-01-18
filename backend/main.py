@@ -17,6 +17,7 @@ from vedic_calc import (
     find_matching_signatures,
     calculate_correlation_score,
     calculate_planetary_positions,
+    calculate_aspects,
     RASHIS,
     NAKSHATRAS,
 )
@@ -91,6 +92,127 @@ def categorize_event(text: str) -> str:
     return 'general'
 
 
+# Country and region detection
+COUNTRIES = {
+    # Asia
+    'India': ['india', 'indian', 'delhi', 'mumbai', 'calcutta', 'kolkata', 'chennai', 'madras', 'bengal', 'punjab', 'gujarat', 'rajasthan', 'maharashtra', 'tamil', 'kerala', 'mughal', 'maratha', 'vijayanagara', 'chola', 'maurya', 'gupta'],
+    'China': ['china', 'chinese', 'beijing', 'peking', 'shanghai', 'ming', 'qing', 'tang', 'song', 'han dynasty', 'tibet', 'manchuria'],
+    'Japan': ['japan', 'japanese', 'tokyo', 'kyoto', 'osaka', 'shogun', 'samurai', 'meiji', 'edo'],
+    'Korea': ['korea', 'korean', 'seoul', 'pyongyang', 'joseon'],
+    'Vietnam': ['vietnam', 'vietnamese', 'hanoi', 'saigon'],
+    'Thailand': ['thailand', 'thai', 'siam', 'bangkok'],
+    'Indonesia': ['indonesia', 'indonesian', 'java', 'sumatra', 'jakarta', 'batavia'],
+    'Philippines': ['philippines', 'filipino', 'manila'],
+    'Malaysia': ['malaysia', 'malaysian', 'malaya', 'kuala lumpur'],
+    'Singapore': ['singapore'],
+    'Myanmar': ['myanmar', 'burma', 'burmese', 'rangoon', 'yangon'],
+    'Pakistan': ['pakistan', 'pakistani', 'karachi', 'lahore', 'islamabad'],
+    'Bangladesh': ['bangladesh', 'bangladeshi', 'dhaka', 'east pakistan'],
+    'Sri Lanka': ['sri lanka', 'ceylon', 'sinhalese', 'colombo'],
+    'Nepal': ['nepal', 'nepalese', 'kathmandu'],
+    'Afghanistan': ['afghanistan', 'afghan', 'kabul', 'kandahar'],
+    
+    # Middle East
+    'Iran': ['iran', 'iranian', 'persia', 'persian', 'tehran', 'isfahan', 'safavid'],
+    'Iraq': ['iraq', 'iraqi', 'baghdad', 'babylon', 'mesopotamia', 'basra'],
+    'Saudi Arabia': ['saudi', 'arabia', 'arabian', 'mecca', 'medina', 'riyadh'],
+    'Turkey': ['turkey', 'turkish', 'ottoman', 'constantinople', 'istanbul', 'ankara', 'anatolia'],
+    'Israel': ['israel', 'israeli', 'jerusalem', 'tel aviv', 'judea', 'palestine', 'palestinian'],
+    'Egypt': ['egypt', 'egyptian', 'cairo', 'alexandria', 'pharaoh', 'nile'],
+    'Syria': ['syria', 'syrian', 'damascus', 'aleppo'],
+    'Lebanon': ['lebanon', 'lebanese', 'beirut'],
+    'Jordan': ['jordan', 'jordanian', 'amman'],
+    
+    # Europe
+    'United Kingdom': ['britain', 'british', 'england', 'english', 'scotland', 'scottish', 'wales', 'welsh', 'ireland', 'irish', 'london', 'edinburgh', 'uk', 'united kingdom'],
+    'France': ['france', 'french', 'paris', 'versailles', 'normandy', 'gaul', 'napoleon', 'bourbon'],
+    'Germany': ['germany', 'german', 'berlin', 'prussia', 'prussian', 'bavaria', 'saxon', 'holy roman'],
+    'Italy': ['italy', 'italian', 'rome', 'roman', 'venice', 'venetian', 'florence', 'milan', 'naples', 'papal', 'vatican'],
+    'Spain': ['spain', 'spanish', 'madrid', 'castile', 'aragon', 'habsburg', 'seville', 'barcelona'],
+    'Portugal': ['portugal', 'portuguese', 'lisbon'],
+    'Netherlands': ['netherlands', 'dutch', 'holland', 'amsterdam', 'rotterdam'],
+    'Belgium': ['belgium', 'belgian', 'brussels', 'flanders'],
+    'Austria': ['austria', 'austrian', 'vienna', 'habsburg'],
+    'Switzerland': ['switzerland', 'swiss', 'geneva', 'zurich'],
+    'Poland': ['poland', 'polish', 'warsaw', 'krakow'],
+    'Russia': ['russia', 'russian', 'moscow', 'st petersburg', 'soviet', 'ussr', 'czar', 'tsar', 'romanov'],
+    'Ukraine': ['ukraine', 'ukrainian', 'kiev', 'kyiv'],
+    'Greece': ['greece', 'greek', 'athens', 'sparta', 'byzantine', 'macedon'],
+    'Sweden': ['sweden', 'swedish', 'stockholm'],
+    'Norway': ['norway', 'norwegian', 'oslo', 'viking'],
+    'Denmark': ['denmark', 'danish', 'copenhagen'],
+    'Finland': ['finland', 'finnish', 'helsinki'],
+    'Hungary': ['hungary', 'hungarian', 'budapest', 'magyar'],
+    'Czech Republic': ['czech', 'bohemia', 'bohemian', 'prague'],
+    'Romania': ['romania', 'romanian', 'bucharest', 'wallachia'],
+    'Bulgaria': ['bulgaria', 'bulgarian', 'sofia'],
+    'Serbia': ['serbia', 'serbian', 'belgrade', 'yugoslavia'],
+    
+    # Americas
+    'United States': ['united states', 'america', 'american', 'usa', 'u.s.', 'washington', 'new york', 'california', 'texas', 'congress', 'president'],
+    'Canada': ['canada', 'canadian', 'toronto', 'montreal', 'ottawa', 'quebec'],
+    'Mexico': ['mexico', 'mexican', 'aztec', 'maya'],
+    'Brazil': ['brazil', 'brazilian', 'rio', 'sao paulo'],
+    'Argentina': ['argentina', 'argentine', 'buenos aires'],
+    'Peru': ['peru', 'peruvian', 'lima', 'inca'],
+    'Colombia': ['colombia', 'colombian', 'bogota'],
+    'Chile': ['chile', 'chilean', 'santiago'],
+    'Cuba': ['cuba', 'cuban', 'havana'],
+    
+    # Africa
+    'South Africa': ['south africa', 'south african', 'cape town', 'johannesburg', 'zulu', 'boer'],
+    'Nigeria': ['nigeria', 'nigerian', 'lagos'],
+    'Ethiopia': ['ethiopia', 'ethiopian', 'abyssinia', 'addis ababa'],
+    'Morocco': ['morocco', 'moroccan', 'marrakesh'],
+    'Algeria': ['algeria', 'algerian', 'algiers'],
+    'Tunisia': ['tunisia', 'tunisian', 'tunis', 'carthage'],
+    'Libya': ['libya', 'libyan', 'tripoli'],
+    'Sudan': ['sudan', 'sudanese', 'khartoum'],
+    'Kenya': ['kenya', 'kenyan', 'nairobi'],
+    
+    # Oceania
+    'Australia': ['australia', 'australian', 'sydney', 'melbourne'],
+    'New Zealand': ['new zealand', 'zealand', 'auckland', 'wellington', 'maori'],
+}
+
+REGIONS = {
+    'South Asia': ['India', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Nepal', 'Afghanistan'],
+    'East Asia': ['China', 'Japan', 'Korea'],
+    'Southeast Asia': ['Vietnam', 'Thailand', 'Indonesia', 'Philippines', 'Malaysia', 'Singapore', 'Myanmar'],
+    'Middle East': ['Iran', 'Iraq', 'Saudi Arabia', 'Turkey', 'Israel', 'Egypt', 'Syria', 'Lebanon', 'Jordan'],
+    'Western Europe': ['United Kingdom', 'France', 'Germany', 'Italy', 'Spain', 'Portugal', 'Netherlands', 'Belgium'],
+    'Eastern Europe': ['Russia', 'Ukraine', 'Poland', 'Hungary', 'Czech Republic', 'Romania', 'Bulgaria', 'Serbia'],
+    'Northern Europe': ['Sweden', 'Norway', 'Denmark', 'Finland'],
+    'North America': ['United States', 'Canada', 'Mexico'],
+    'South America': ['Brazil', 'Argentina', 'Peru', 'Colombia', 'Chile'],
+    'Africa': ['South Africa', 'Nigeria', 'Ethiopia', 'Morocco', 'Algeria', 'Tunisia', 'Libya', 'Sudan', 'Kenya', 'Egypt'],
+    'Oceania': ['Australia', 'New Zealand'],
+}
+
+
+def detect_countries(text: str) -> List[str]:
+    """Detect countries mentioned in event text"""
+    text_lower = text.lower()
+    detected = []
+    
+    for country, keywords in COUNTRIES.items():
+        for keyword in keywords:
+            if keyword in text_lower:
+                if country not in detected:
+                    detected.append(country)
+                break
+    
+    return detected
+
+
+def get_region(country: str) -> Optional[str]:
+    """Get region for a country"""
+    for region, countries in REGIONS.items():
+        if country in countries:
+            return region
+    return None
+
+
 async def fetch_wikipedia_events(month: int, day: int) -> dict:
     """Fetch historical events from Wikipedia API"""
     # Use zero-padded month and day for Wikipedia REST API
@@ -108,14 +230,20 @@ async def fetch_wikipedia_events(month: int, day: int) -> dict:
             
             # Process and categorize events
             events = []
+            all_countries = set()
             for event in data.get("events", []):
                 # Filter for last 1500 years (from ~525 CE)
                 year = event.get("year", 0)
                 if year >= 525:
+                    text = event.get("text", "")
+                    countries = detect_countries(text)
+                    all_countries.update(countries)
                     events.append({
                         "year": year,
-                        "text": event.get("text", ""),
-                        "category": categorize_event(event.get("text", "")),
+                        "text": text,
+                        "category": categorize_event(text),
+                        "countries": countries,
+                        "region": get_region(countries[0]) if countries else None,
                         "links": event.get("pages", [])[:3]  # Limit links
                     })
             
@@ -123,10 +251,13 @@ async def fetch_wikipedia_events(month: int, day: int) -> dict:
             for birth in data.get("births", []):
                 year = birth.get("year", 0)
                 if year >= 525:
+                    text = birth.get("text", "")
+                    countries = detect_countries(text)
                     births.append({
                         "year": year,
-                        "text": birth.get("text", ""),
+                        "text": text,
                         "category": "birth",
+                        "countries": countries,
                         "links": birth.get("pages", [])[:2]
                     })
             
@@ -134,10 +265,13 @@ async def fetch_wikipedia_events(month: int, day: int) -> dict:
             for death in data.get("deaths", []):
                 year = death.get("year", 0)
                 if year >= 525:
+                    text = death.get("text", "")
+                    countries = detect_countries(text)
                     deaths.append({
                         "year": year,
-                        "text": death.get("text", ""),
+                        "text": text,
                         "category": "death",
+                        "countries": countries,
                         "links": death.get("pages", [])[:2]
                     })
             
@@ -145,7 +279,8 @@ async def fetch_wikipedia_events(month: int, day: int) -> dict:
                 "date": f"{month:02d}-{day:02d}",
                 "events": sorted(events, key=lambda x: x["year"], reverse=True),
                 "births": sorted(births, key=lambda x: x["year"], reverse=True)[:20],
-                "deaths": sorted(deaths, key=lambda x: x["year"], reverse=True)[:20]
+                "deaths": sorted(deaths, key=lambda x: x["year"], reverse=True)[:20],
+                "available_countries": sorted(list(all_countries)),
             }
             
         except httpx.HTTPError as e:
@@ -171,7 +306,9 @@ async def get_events_by_date(
     day: int,
     category: Optional[str] = Query(None, description="Filter by category"),
     year_from: Optional[int] = Query(None, description="Filter events from this year"),
-    year_to: Optional[int] = Query(None, description="Filter events up to this year")
+    year_to: Optional[int] = Query(None, description="Filter events up to this year"),
+    country: Optional[str] = Query(None, description="Filter by country name"),
+    region: Optional[str] = Query(None, description="Filter by region (e.g., South Asia, Western Europe)")
 ):
     """Get historical events for a specific date with optional filters"""
     
@@ -196,7 +333,27 @@ async def get_events_by_date(
         data["births"] = [e for e in data["births"] if e["year"] <= year_to]
         data["deaths"] = [e for e in data["deaths"] if e["year"] <= year_to]
     
+    if country:
+        data["events"] = [e for e in data["events"] if country in e.get("countries", [])]
+        data["births"] = [e for e in data["births"] if country in e.get("countries", [])]
+        data["deaths"] = [e for e in data["deaths"] if country in e.get("countries", [])]
+    
+    if region:
+        region_countries = REGIONS.get(region, [])
+        data["events"] = [e for e in data["events"] if any(c in region_countries for c in e.get("countries", []))]
+        data["births"] = [e for e in data["births"] if any(c in region_countries for c in e.get("countries", []))]
+        data["deaths"] = [e for e in data["deaths"] if any(c in region_countries for c in e.get("countries", []))]
+    
     return data
+
+
+@app.get("/api/countries")
+async def get_countries():
+    """Get list of available countries and regions for filtering"""
+    return {
+        "countries": sorted(list(COUNTRIES.keys())),
+        "regions": list(REGIONS.keys()),
+    }
 
 
 @app.get("/api/categories")
@@ -411,6 +568,128 @@ async def search_by_planetary_position(
             "planet": planet,
             "nakshatra": nakshatra,
             "rashi": rashi,
+        },
+        "matching_events": matching_events,
+        "total_matches": len(matching_events),
+    }
+
+
+@app.get("/api/vedic/aspect-search")
+async def search_by_aspect(
+    planet1: str = Query(..., description="First planet"),
+    planet2: str = Query(..., description="Second planet"),
+    aspect_type: str = Query(..., description="Aspect type: conjunction, 3rd_house, square, trine, 6th_house, opposition, 8th_house, 12th_house"),
+    month: int = Query(..., description="Month to search"),
+    day: int = Query(..., description="Day to search"),
+    country: Optional[str] = Query(None, description="Filter by country"),
+    region: Optional[str] = Query(None, description="Filter by region"),
+):
+    """
+    Search for historical events where two planets form a specific aspect.
+    
+    Aspect types:
+    - conjunction: Same sign (0 signs apart)
+    - 3rd_house: 2 signs apart
+    - square: 3 signs apart (4th house)
+    - trine: 4 signs apart (5th house)
+    - 6th_house: 5 signs apart
+    - opposition: 6 signs apart (7th house)
+    - 8th_house: 7 signs apart
+    - 12th_house: 11 signs apart
+    """
+    
+    valid_planets = ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Rahu", "Ketu"]
+    if planet1 not in valid_planets:
+        raise HTTPException(status_code=400, detail=f"Invalid planet1. Choose from: {valid_planets}")
+    if planet2 not in valid_planets:
+        raise HTTPException(status_code=400, detail=f"Invalid planet2. Choose from: {valid_planets}")
+    
+    valid_aspects = ["conjunction", "3rd_house", "square", "trine", "6th_house", "opposition", "8th_house", "12th_house"]
+    if aspect_type not in valid_aspects:
+        raise HTTPException(status_code=400, detail=f"Invalid aspect_type. Choose from: {valid_aspects}")
+    
+    # Aspect type to sign distance mapping
+    aspect_distances = {
+        "conjunction": [0],
+        "3rd_house": [2, 10],  # 2 or 10 signs apart
+        "square": [3, 9],      # 3 or 9 signs apart
+        "trine": [4, 8],       # 4 or 8 signs apart
+        "6th_house": [5, 7],   # 5 or 7 signs apart (wait, 7 is 8th house)
+        "opposition": [6],      # exactly 6 signs apart
+        "8th_house": [7, 5],   # 7 or 5 signs apart
+        "12th_house": [11, 1], # 11 or 1 sign apart
+    }
+    
+    # Corrected mappings based on house positions
+    aspect_distances = {
+        "conjunction": [0],
+        "3rd_house": [2],     # 2 signs = 3rd house
+        "square": [3],        # 3 signs = 4th house
+        "trine": [4],         # 4 signs = 5th house
+        "6th_house": [5],     # 5 signs = 6th house
+        "opposition": [6],    # 6 signs = 7th house
+        "8th_house": [7],     # 7 signs = 8th house
+        "12th_house": [11],   # 11 signs = 12th house (1 behind)
+    }
+    
+    # Fetch historical events
+    wiki_data = await fetch_wikipedia_events(month, day)
+    
+    matching_events = []
+    
+    for event in wiki_data["events"]:
+        year = event["year"]
+        
+        # Apply country/region filter
+        if country and country not in event.get("countries", []):
+            continue
+        if region:
+            region_countries = REGIONS.get(region, [])
+            if not any(c in region_countries for c in event.get("countries", [])):
+                continue
+        
+        try:
+            event_date = datetime(year, month, day, 12, 0)
+        except ValueError:
+            continue
+        
+        positions = calculate_planetary_positions(event_date)
+        pos1 = positions.get(planet1)
+        pos2 = positions.get(planet2)
+        
+        if not pos1 or not pos2:
+            continue
+        
+        # Calculate sign distance
+        rashi1 = pos1["rashi"]["id"]
+        rashi2 = pos2["rashi"]["id"]
+        distance = (rashi2 - rashi1 + 12) % 12
+        reverse_distance = (rashi1 - rashi2 + 12) % 12
+        
+        # Check if aspect matches
+        target_distances = aspect_distances.get(aspect_type, [])
+        if distance in target_distances or reverse_distance in target_distances:
+            matching_events.append({
+                "event": event,
+                "aspect": {
+                    "planet1": planet1,
+                    "planet1_rashi": pos1["rashi"]["name"],
+                    "planet1_nakshatra": pos1["nakshatra"]["name"],
+                    "planet2": planet2,
+                    "planet2_rashi": pos2["rashi"]["name"],
+                    "planet2_nakshatra": pos2["nakshatra"]["name"],
+                    "aspect_type": aspect_type,
+                    "sign_distance": min(distance, reverse_distance),
+                }
+            })
+    
+    return {
+        "search_criteria": {
+            "planet1": planet1,
+            "planet2": planet2,
+            "aspect_type": aspect_type,
+            "country": country,
+            "region": region,
         },
         "matching_events": matching_events,
         "total_matches": len(matching_events),
