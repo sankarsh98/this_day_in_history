@@ -437,7 +437,12 @@ function CombinationBuilder({ selectedDate }) {
               {results.data.matching_events?.map((item, index) => (
                 <div key={index} className="result-card">
                   <div className="result-header">
-                    <span className="result-year">{item.event.year}</span>
+                    <div className="result-year-date">
+                      <span className="result-year">{item.event.year}</span>
+                      {item.event_date && (
+                        <span className="result-date">{item.event_date}</span>
+                      )}
+                    </div>
                     {/* Show position for position search */}
                     {results.type === 'position' && item.planetary_position && (
                       <div className="result-position">
@@ -477,6 +482,38 @@ function CombinationBuilder({ selectedDate }) {
                   </div>
                   
                   <p className="result-text">{item.event.text}</p>
+                  
+                  {/* Chart Summary - Key Astrological Combinations */}
+                  {item.chart_summary && (
+                    <div className="chart-summary-section">
+                      <div className="chart-summary-header">
+                        <Star size={14} />
+                        <span>Astrological Combinations on {item.event_date || item.event.year}</span>
+                      </div>
+                      
+                      {/* Key Combinations */}
+                      {item.chart_summary.key_combinations?.length > 0 && (
+                        <div className="key-combinations">
+                          {item.chart_summary.key_combinations.map((comb, i) => (
+                            <span key={i} className={`combination-badge ${comb.type}`}>
+                              {comb.description}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Planet Positions Grid */}
+                      <div className="positions-mini-grid">
+                        {item.chart_summary.positions && 
+                          Object.entries(item.chart_summary.positions).slice(0, 5).map(([planet, pos]) => (
+                            <span key={planet} className="position-mini">
+                              <strong>{planet.substring(0, 2)}</strong>: {pos.rashi}
+                            </span>
+                          ))
+                        }
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Research Links */}
                   <div className="research-links">

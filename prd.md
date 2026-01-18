@@ -75,3 +75,5 @@ Users can customize their view based on specific astronomical criteria:
 	- the blank font is not visible, change it to a better color
 	- The Date shown is not aligned properly, the sizes of date, month and time is not proper and aligned, please fix
 	- Color theme is too dark
+
+	- In the custom search, while providing events give the date of the event and astrological combinations for that day

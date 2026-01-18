@@ -562,8 +562,29 @@ async def search_by_planetary_position(
             matches = False
         
         if matches:
+            # Get full chart for the event
+            event_chart = get_vedic_chart(event_date)
+            
+            # Build key combinations summary
+            key_combinations = []
+            
+            # Add conjunctions
+            for conj in event_chart.get("conjunctions", []):
+                key_combinations.append({
+                    "type": "conjunction",
+                    "description": f"{', '.join(conj['planets'])} in {conj['rashi']}"
+                })
+            
+            # Add notable aspects
+            for asp in event_chart.get("aspects", [])[:5]:
+                key_combinations.append({
+                    "type": "aspect", 
+                    "description": f"{asp['planet1']} {asp['type'].replace('_', ' ')} {asp['planet2']}"
+                })
+            
             matching_events.append({
                 "event": event,
+                "event_date": event_date.strftime("%B %d, %Y"),
                 "planetary_position": {
                     "planet": planet,
                     "rashi": planet_pos["rashi"]["name"],
@@ -571,6 +592,12 @@ async def search_by_planetary_position(
                     "pada": planet_pos["nakshatra"]["pada"],
                     "longitude": planet_pos["longitude"],
                     "dignity": planet_pos["dignity"],
+                },
+                "chart_summary": {
+                    "ayanamsha": event_chart["ayanamsha"],
+                    "positions": {p: {"rashi": d["rashi"]["name"], "nakshatra": d["nakshatra"]["name"]} 
+                                 for p, d in event_chart["positions"].items()},
+                    "key_combinations": key_combinations,
                 }
             })
     
@@ -680,8 +707,29 @@ async def search_by_aspect(
         # Check if aspect matches
         target_distances = aspect_distances.get(aspect_type, [])
         if distance in target_distances or reverse_distance in target_distances:
+            # Get full chart for the event
+            event_chart = get_vedic_chart(event_date)
+            
+            # Build key combinations summary
+            key_combinations = []
+            
+            # Add conjunctions
+            for conj in event_chart.get("conjunctions", []):
+                key_combinations.append({
+                    "type": "conjunction",
+                    "description": f"{', '.join(conj['planets'])} in {conj['rashi']}"
+                })
+            
+            # Add notable aspects
+            for asp in event_chart.get("aspects", [])[:5]:
+                key_combinations.append({
+                    "type": "aspect", 
+                    "description": f"{asp['planet1']} {asp['type'].replace('_', ' ')} {asp['planet2']}"
+                })
+            
             matching_events.append({
                 "event": event,
+                "event_date": event_date.strftime("%B %d, %Y"),
                 "aspect": {
                     "planet1": planet1,
                     "planet1_rashi": pos1["rashi"]["name"],
@@ -691,6 +739,12 @@ async def search_by_aspect(
                     "planet2_nakshatra": pos2["nakshatra"]["name"],
                     "aspect_type": aspect_type,
                     "sign_distance": min(distance, reverse_distance),
+                },
+                "chart_summary": {
+                    "ayanamsha": event_chart["ayanamsha"],
+                    "positions": {p: {"rashi": d["rashi"]["name"], "nakshatra": d["nakshatra"]["name"]} 
+                                 for p, d in event_chart["positions"].items()},
+                    "key_combinations": key_combinations,
                 }
             })
     
