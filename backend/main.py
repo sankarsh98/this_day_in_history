@@ -395,16 +395,18 @@ async def get_vedic_chart_today():
 async def get_correlated_events(
     month: int,
     day: int,
+    year: Optional[int] = Query(None, description="Year for the reference date (defaults to current year)"),
+    hour: Optional[int] = Query(12, description="Hour of day (0-23)"),
     min_score: int = Query(3, description="Minimum correlation score"),
     limit: int = Query(20, description="Maximum number of correlated events")
 ):
     """
-    Get historical events that have matching Vedic astrological signatures with today.
+    Get historical events that have matching Vedic astrological signatures with the selected date.
     
     This endpoint:
-    1. Calculates today's planetary positions (rashis, nakshatras, aspects, conjunctions)
+    1. Calculates the selected date's planetary positions (rashis, nakshatras, aspects, conjunctions)
     2. For each historical event on this date, calculates the Vedic chart for that year
-    3. Finds events where planetary patterns match (e.g., Saturn in Ashwini today → events when Saturn was also in Ashwini)
+    3. Finds events where planetary patterns match (e.g., Saturn in Ashwini on selected date → events when Saturn was also in Ashwini)
     4. Returns events sorted by correlation score
     """
     
@@ -413,10 +415,19 @@ async def get_correlated_events(
     if not (1 <= day <= 31):
         raise HTTPException(status_code=400, detail="Day must be between 1 and 31")
     
-    # Get today's Vedic signatures
-    today = datetime.now()
-    today_signatures = get_planetary_signatures(today)
-    today_chart = get_vedic_chart(today)
+    # Use provided year or current year
+    reference_year = year if year else datetime.now().year
+    reference_hour = hour if hour is not None else 12
+    
+    # Create the reference date (the date user selected)
+    try:
+        reference_date = datetime(reference_year, month, day, reference_hour, 0)
+    except ValueError:
+        reference_date = datetime(reference_year, month, day - 1, reference_hour, 0)  # Handle edge cases like Feb 29
+    
+    # Get Vedic signatures for the reference date
+    reference_signatures = get_planetary_signatures(reference_date)
+    reference_chart = get_vedic_chart(reference_date)
     
     # Fetch historical events
     wiki_data = await fetch_wikipedia_events(month, day)
@@ -424,11 +435,11 @@ async def get_correlated_events(
     correlated_events = []
     
     for event in wiki_data["events"]:
-        year = event["year"]
+        event_year = event["year"]
         
         # Create datetime for the historical event
         try:
-            event_date = datetime(year, month, day, 12, 0)
+            event_date = datetime(event_year, month, day, 12, 0)
         except ValueError:
             continue  # Skip invalid dates (e.g., Feb 29 in non-leap years)
         
@@ -436,7 +447,7 @@ async def get_correlated_events(
         event_signatures = get_planetary_signatures(event_date)
         
         # Find matching signatures
-        matches = find_matching_signatures(today_signatures, event_signatures)
+        matches = find_matching_signatures(reference_signatures, event_signatures)
         
         # Calculate correlation score
         score = calculate_correlation_score(matches)
@@ -458,41 +469,41 @@ async def get_correlated_events(
     # Sort by correlation score (highest first)
     correlated_events.sort(key=lambda x: x["correlation_score"], reverse=True)
     
-    # Create summary of today's signatures for the frontend
-    today_summary = {
-        "date": today.strftime("%Y-%m-%d"),
-        "chart": today_chart,
+    # Create summary of the reference date's signatures for the frontend
+    reference_summary = {
+        "date": reference_date.strftime("%Y-%m-%d"),
+        "chart": reference_chart,
         "key_signatures": []
     }
     
     # Add notable signatures to summary
-    for sig in today_signatures["planet_in_nakshatra"]:
+    for sig in reference_signatures["planet_in_nakshatra"]:
         if sig["planet"] in ["Saturn", "Jupiter", "Mars", "Rahu", "Ketu"]:
-            today_summary["key_signatures"].append({
+            reference_summary["key_signatures"].append({
                 "type": "nakshatra",
                 "description": f"{sig['planet']} in {sig['nakshatra']} (Pada {sig['pada']})"
             })
     
-    for sig in today_signatures["dignities"]:
-        today_summary["key_signatures"].append({
+    for sig in reference_signatures["dignities"]:
+        reference_summary["key_signatures"].append({
             "type": "dignity",
             "description": f"{sig['planet']} {sig['dignity']} in {sig['rashi']}"
         })
     
-    for sig in today_signatures["conjunctions"]:
-        today_summary["key_signatures"].append({
+    for sig in reference_signatures["conjunctions"]:
+        reference_summary["key_signatures"].append({
             "type": "conjunction",
             "description": f"{', '.join(sig['planets'])} conjunction in {sig['rashi']}"
         })
     
-    for sig in today_signatures["aspects"][:5]:  # Limit aspects
-        today_summary["key_signatures"].append({
+    for sig in reference_signatures["aspects"][:5]:  # Limit aspects
+        reference_summary["key_signatures"].append({
             "type": "aspect",
             "description": f"{sig['planet1']} {sig['type'].replace('_', ' ')} {sig['planet2']}"
         })
     
     return {
-        "today": today_summary,
+        "today": reference_summary,  # Keep key as "today" for frontend compatibility
         "correlated_events": correlated_events[:limit],
         "total_matches": len(correlated_events),
     }

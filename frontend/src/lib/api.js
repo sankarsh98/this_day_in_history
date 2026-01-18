@@ -46,10 +46,12 @@ export async function getVedicChart(month, day, year) {
   return response.data;
 }
 
-export async function getCorrelatedEvents(month, day, minScore = 3, limit = 20) {
-  const response = await api.get(`/vedic/correlations/${month}/${day}`, {
-    params: { min_score: minScore, limit }
-  });
+export async function getCorrelatedEvents(month, day, year = null, hour = null, minScore = 2, limit = 30) {
+  const params = { min_score: minScore, limit };
+  if (year) params.year = year;
+  if (hour !== null) params.hour = hour;
+  
+  const response = await api.get(`/vedic/correlations/${month}/${day}`, { params });
   return response.data;
 }
 

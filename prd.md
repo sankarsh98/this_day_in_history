@@ -62,3 +62,16 @@ Users can customize their view based on specific astronomical criteria:
 * **User Contributions:** Allowing users to suggest historical events to be added to the database.
 
 ---
+
+-----------------------------------
+
+## New features:
+	- Update the icon of the webpage
+	- Update the name of the webpage
+	- Make the UI look more slick and modern
+	- Update the correlations section based on the updated date
+
+	- The arrow buttons for date switiching is not visible properly make them bigger
+	- the blank font is not visible, change it to a better color
+	- The Date shown is not aligned properly, the sizes of date, month and time is not proper and aligned, please fix
+	- Color theme is too dark

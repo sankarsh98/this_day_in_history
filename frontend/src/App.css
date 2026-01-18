@@ -1,18 +1,25 @@
 /* This Day in History - Vedic Edition Styles */
 
 :root {
-  --primary: #2D3436;
-  --primary-light: #636E72;
-  --accent: #6C5CE7;
-  --accent-light: #A29BFE;
-  --background: #F8F9FA;
-  --card-bg: #FFFFFF;
-  --text: #2D3436;
-  --text-light: #636E72;
-  --border: #DFE6E9;
-  --success: #00B894;
-  --warning: #FDCB6E;
-  --danger: #E17055;
+  --primary: #2c3e50;
+  --primary-light: #34495e;
+  --accent: #e74c3c;
+  --accent-light: #ff6b6b;
+  --accent-gradient: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  --background: #ecf0f1;
+  --background-light: #ffffff;
+  --card-bg: #ffffff;
+  --card-hover: #f8f9fa;
+  --text: #2c3e50;
+  --text-light: #7f8c8d;
+  --text-muted: #95a5a6;
+  --border: #dfe6e9;
+  --success: #27ae60;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --gold: #f39c12;
+  --purple: #9b59b6;
+  --blue: #3498db;
 }
 
 * {
@@ -22,7 +29,7 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   background: var(--background);
   color: var(--text);
   line-height: 1.6;
@@ -32,80 +39,178 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--background);
 }
 
 /* Header */
 .app-header {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, #1a252f 100%);
   color: white;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   text-align: center;
+  border-bottom: 3px solid var(--accent);
+  position: relative;
+  overflow: hidden;
+}
+
+.app-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(231, 76, 60, 0.1) 0%, transparent 50%);
+  animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.8; }
 }
 
 .app-header h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 800;
   margin-bottom: 0.25rem;
+  letter-spacing: -0.5px;
+  position: relative;
+  color: #fff;
 }
 
 .app-header .subtitle {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   opacity: 0.9;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  position: relative;
 }
 
 /* Main Content */
 .app-main {
   flex: 1;
-  padding: 1rem;
+  padding: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
 }
 
 /* Date Selector */
-.date-selector {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 1rem;
+.date-selector-wrapper {
   background: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 1rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  overflow: hidden;
 }
 
-.date-selector h2 {
-  font-size: 1.5rem;
-  min-width: 180px;
+.date-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  gap: 1rem;
+}
+
+.date-center {
+  flex: 1;
   text-align: center;
 }
 
-.date-selector .nav-btn {
+.date-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.date-day {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.date-month-year {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.date-month {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.date-year {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.date-time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+/* Navigation Buttons - BIGGER and MORE VISIBLE */
+.nav-btn {
   background: var(--accent);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+  flex-shrink: 0;
 }
 
-.date-selector .nav-btn:hover {
+.nav-btn svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2.5;
+}
+
+.nav-btn:hover {
   background: var(--accent-light);
   transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(231, 76, 60, 0.4);
+}
+
+.nav-btn:active {
+  transform: scale(0.95);
 }
 
 .date-input {
-  width: 80px;
-  padding: 0.5rem;
+  width: 100%;
+  padding: 0.6rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   text-align: center;
+  background: var(--background);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .today-btn {
@@ -115,10 +220,18 @@ body {
   background: var(--success);
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 24px;
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  transition: all 0.3s ease;
+}
+
+.today-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
 }
 
 /* Filter Panel */
@@ -133,11 +246,18 @@ body {
   background: var(--card-bg);
   border: 1px solid var(--border);
   padding: 0.75rem 1rem;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   width: 100%;
   justify-content: center;
   position: relative;
+  color: var(--text);
+  transition: all 0.3s ease;
+}
+
+.filter-toggle:hover {
+  background: var(--card-hover);
+  border-color: var(--accent);
 }
 
 .filter-badge {
@@ -155,7 +275,7 @@ body {
 .filter-content {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1rem;
   margin-top: 0.5rem;
 }
@@ -1972,33 +2092,38 @@ body {
 .date-actions-row {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--background);
+  border-top: 1px solid var(--border);
 }
 
 .action-btn {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 24px;
   font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.today-btn {
+.action-btn.today-btn {
   background: var(--success);
   color: white;
   border: none;
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
 }
 
-.today-btn:hover {
-  background: #00a884;
+.action-btn.today-btn:hover {
+  background: #219a52;
+  transform: translateY(-1px);
 }
 
 .expand-btn {
-  background: var(--background);
+  background: var(--card-bg);
   color: var(--text);
   border: 1px solid var(--border);
 }
@@ -2011,8 +2136,8 @@ body {
 }
 
 .date-advanced-panel {
-  margin-top: 1rem;
-  padding-top: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--background);
   border-top: 1px solid var(--border);
 }
 
@@ -2029,18 +2154,21 @@ body {
 }
 
 .advanced-section label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   color: var(--text-light);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
 }
 
 .advanced-section input,
 .advanced-section select {
-  padding: 0.5rem;
+  padding: 0.6rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 0.9rem;
+  background: var(--card-bg);
+  color: var(--text);
 }
 
 .quick-years-section {

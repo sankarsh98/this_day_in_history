@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import { getCorrelatedEvents } from '../lib/api';
 import { Sparkles, TrendingUp, Star, Zap, Circle, ExternalLink, BookOpen, Search } from 'lucide-react';
 
@@ -39,7 +40,9 @@ function CorrelationView({ selectedDate }) {
       try {
         const month = selectedDate.getMonth() + 1;
         const day = selectedDate.getDate();
-        const result = await getCorrelatedEvents(month, day, 2, 30);
+        const year = selectedDate.getFullYear();
+        const hour = selectedDate.getHours();
+        const result = await getCorrelatedEvents(month, day, year, hour, 2, 30);
         setData(result);
       } catch (err) {
         setError(err.message || 'Failed to fetch correlations');
@@ -80,10 +83,10 @@ function CorrelationView({ selectedDate }) {
       <div className="today-signatures">
         <h3>
           <Sparkles size={20} />
-          Today's Vedic Signatures
+          Vedic Signatures for {format(selectedDate, 'MMMM d, yyyy')}
         </h3>
         <p className="signature-intro">
-          Events below share these planetary patterns with today:
+          Events below share these planetary patterns with the selected date:
         </p>
         <div className="signature-list">
           {today.key_signatures.map((sig, i) => (
